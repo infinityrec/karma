@@ -2,7 +2,27 @@
     const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx_wlplDuK9PhiMWlFfoTKyfn1M94jy6uDWnFWWo8Tg1z1pczXWIqJfy23qX-CUiton/exec";
     const MIN_KARMA = 200;
     const MIN_AGE_DAYS = 240;
+    // --- أضف الدالة هنا أو استبدل القديمة بها ---
+    async function fetchRedditData(username) {
+        // ضع هنا الرابط الذي يظهر لك في أعلى لوحة تحكم Render بعد عمل الـ Deploy
+        const renderUrl = `https://your-service-name.onrender.com/check/${username}`;
+        
+        const response = await fetch(renderUrl);
+        if (!response.ok) throw new Error("Backend Connection Failed");
+        
+        const data = await response.json();
 
+        if (!data.valid) {
+            throw new Error(data.error || "User Not Found");
+        }
+        return data; // البيانات القادمة من بايثون: karma و created_utc
+    }
+    // ------------------------------------------
+
+    async function startVerification() {
+        // ... باقي كود الـ startVerification الخاص بك كما هو ...
+        // السكربت سينادي تلقائياً على fetchRedditData الجديدة التي أضفناها بالأعلى
+    }
     async function startVerification() {
         const usernameInput = document.getElementById('username');
         const btn = document.getElementById('btn');
