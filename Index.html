@@ -1,0 +1,76 @@
+<script>
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzyF4dtPMPS9wbcJxUHVYOuq1op4J4hE7Qldzah7C5pUwEqj5DVWWe9XwaB3I0wPGvR/exec";
+    const MIN_KARMA = 200;
+    const MIN_AGE_DAYS = 240;
+
+    async function startVerification() {
+        const usernameInput = document.getElementById('username');
+        const btn = document.getElementById('btn');
+        const username = usernameInput.value.trim().replace(/^u\//, '');
+
+        if (!username) {
+            showMessage("ERROR: NO INPUT DETECTED.", "error");
+            return;
+        }
+
+        showMessage("SYSTEM: ACCESSING NEURAL NET...", "loading");
+        btn.disabled = true;
+
+        try {
+            const data = await fetchRedditData(username);
+            const karma = data.total_karma || 0;
+            const createdDate = new Date(data.created_utc * 1000);
+            const ageInDays = Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24));
+
+            console.log(`Verified: ${username} | Karma: ${karma} | Age: ${ageInDays}`);
+
+            if (karma >= MIN_KARMA && ageInDays >= MIN_AGE_DAYS) {
+                showMessage("SUCCESS: VALIDATION CONFIRMED. REDIRECTING...", "success");
+                // تأخير بسيط ليرى المستخدم رسالة النجاح
+                setTimeout(() => { 
+                    window.location.href = WEBHOOK_URL; 
+                }, 1500);
+            } else {
+                showMessage(`FAILURE: KARMA (${karma}/${MIN_KARMA}) OR AGE TOO LOW.`, "error");
+                btn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("System Failure:", error);
+            // تحديد الخطأ بدقة لتجنب الرسالة العامة
+            if (error.message.includes("404")) {
+                showMessage("ERROR: USER NOT FOUND IN REDDIT DATABASE.", "error");
+            } else {
+                showMessage("ERROR: PROXY CONNECTION FAILED. TRY AGAIN.", "error");
+            }
+            btn.disabled = false;
+        }
+    }
+
+    async function fetchRedditData(username) {
+        // استخدام بروكسي AllOrigins لأنه أكثر استقراراً مع GitHub/Render
+        const redditUrl = `https://www.reddit.com/user/${username}/about.json`;
+        const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(redditUrl)}`;
+
+        const response = await fetch(proxy);
+        if (!response.ok) throw new Error("Network response was not ok");
+        
+        const json = await response.json();
+        const userData = JSON.parse(json.contents); // AllOrigins يضع البيانات داخل contents
+
+        if (userData.error || !userData.data) {
+            throw new Error("User Not Found (404)");
+        }
+        return userData.data;
+    }
+
+    function showMessage(text, type) {
+        const div = document.getElementById('message');
+        div.innerText = text;
+        div.className = type;
+    }
+
+    document.getElementById("username").addEventListener("keyup", (e) => {
+        if (e.key === "Enter") startVerification();
+    });
+</script>
