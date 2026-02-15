@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 import praw
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # أو ضع رابط الـ GitHub Pages الخاص بك للأمان
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app = FastAPI()
 
 # استخدام متغيرات البيئة التي ضبطناها في Render
