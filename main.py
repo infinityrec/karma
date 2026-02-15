@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import requests
 import uvicorn
 import os
-
+@app.get("/")
+def home():
+    return {"status": "System Online", "message": "Reddit Checker is ready!"}
 app = FastAPI()
 
 # تفعيل CORS للسماح لصفحة GitHub بالاتصال بالـ API
